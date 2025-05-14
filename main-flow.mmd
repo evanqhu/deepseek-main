@@ -1,0 +1,21 @@
+graph TD
+    A[用户] -->|输入问题/选择模型| B(前端 Home 页面)
+    B -->|POST /api/create-chat| C(后端 API: create-chat)
+    C -->|写入会话| D[(数据库 chats)]
+    C -->|返回 chatId| B
+    B -->|跳转| E(前端 Chat 页面)
+    E -->|POST /api/get-chat| F(后端 API: get-chat)
+    F -->|查 chats| D
+    F -->|返回会话| E
+    E -->|POST /api/get-messages| G(后端 API: get-messages)
+    G -->|查 messages| H[(数据库 messages)]
+    G -->|返回消息| E
+    E -->|用户输入消息| I(前端 useChat)
+    I -->|POST /api/chat| J(后端 API: chat)
+    J -->|校验用户| K[Clerk]
+    J -->|写入用户消息| H
+    J -->|调用 DeepSeek| L[AI 大模型]
+    L -->|返回回复| J
+    J -->|写入 AI 回复| H
+    J -->|流式返回| I
+    I -->|渲染消息| E 
