@@ -3,14 +3,16 @@
 import { useChat } from "@ai-sdk/react";
 import { useEffect, useRef, useState } from "react";
 import EastIcon from "@mui/icons-material/East";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import SideBar from "@/components/side-bar";
 import ReactMarkdown from "react-markdown";
+import clsx from "clsx";
 
 export default function Page() {
   const { id } = useParams(); // 获取聊天 ID
+  const router = useRouter(); // 路由实例
   const [model, setModel] = useState("deepseek-v3"); // 选择的模型
   const endRef = useRef<HTMLDivElement>(null); // 聊天记录底部参考
 
@@ -72,15 +74,20 @@ export default function Page() {
   /** 处理第一条消息 */
   const handleFirstMessage = async (model: string) => {
     if (chat?.data?.title && previousMessages?.data?.length === 0) {
-      await append({
-        role: "user",
-        content: chat?.data?.title,
-      }),
+      // 在聊天中添加一条消息，从而触发 AI 响应的 API 调用
+      await append(
         {
-          model: model,
-          chatId: id,
-          chatUserId: chat?.data?.userId,
-        };
+          role: "user",
+          content: chat?.data?.title,
+        },
+        {
+          body: {
+            model,
+            chatId: id,
+            chatUserId: chat?.data?.userId,
+          },
+        }
+      );
     }
   };
 
@@ -89,6 +96,13 @@ export default function Page() {
     setModel(chat?.data?.model);
     handleFirstMessage(chat?.data?.model);
   }, [chat?.data?.title, previousMessages]);
+
+  // chat.data 为 null 时跳转回首页
+  useEffect(() => {
+    if (chat && chat.data === null) {
+      router.push("/");
+    }
+  }, [chat, router]);
 
   return (
     <div className="w-screen h-screen flex flex-row">
@@ -102,17 +116,27 @@ export default function Page() {
             {messages?.map((message) => (
               <div
                 key={message.id}
-                className={`rounded-lg flex flex-row ${
+                className={clsx(
+                  "rounded-lg flex flex-row",
                   message?.role === "assistant" ? "justify-start mr-18" : "justify-end ml-10"
-                }`}
+                )}
               >
-                <div
-                  className={`inline-block p-2 rounded-lg ${
-                    message?.role === "assistant" ? "bg-blue-300" : "bg-slate-100"
-                  }`}
-                >
-                  <ReactMarkdown>{message?.content}</ReactMarkdown>
-                </div>
+                {message.parts.map((part, i) => {
+                  switch (part.type) {
+                    case "text":
+                      return (
+                        <div
+                          key={`${message.id}-${i}`}
+                          className={clsx(
+                            "inline-block p-2 rounded-lg",
+                            message?.role === "assistant" ? "bg-blue-300" : "bg-slate-100"
+                          )}
+                        >
+                          <ReactMarkdown>{message?.content}</ReactMarkdown>
+                        </div>
+                      );
+                  }
+                })}
               </div>
             ))}
           </div>
@@ -145,9 +169,10 @@ export default function Page() {
           ></textarea>
           <div className="flex flex-row items-center justify-between w-full">
             <div
-              className={`flex flex-row items-center justify-center rounded-lg border-[1px] px-2 py-1 cursor-pointer ${
+              className={clsx(
+                "flex flex-row items-center justify-center rounded-lg border-[1px] px-2 py-1 cursor-pointer",
                 model === "deepseek-r1" ? "border-blue-300 bg-blue-200" : "border-gray-300"
-              }`}
+              )}
               onClick={handleChangeModel}
             >
               <p className="text-sm">深度思考(R1)</p>

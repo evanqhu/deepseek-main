@@ -32,13 +32,18 @@ export async function POST(req: Request) {
 
   // 使用 DeepSeek 模型生成响应
   const result = streamText({
+    // 使用的模型
     model: deepseek(model),
+    // 系统提示词
     system: "You are a helpful assistant.",
+    // 用户与聊天机器人之间的对话历史记录
     messages,
+    // 当生成完成时，将结果存入数据库
     onFinish: async (result) => {
       await createMessage(chatId, result.text, "assistant");
     },
   });
 
+  // 将结果转换为流式响应对象
   return result.toDataStreamResponse();
 }

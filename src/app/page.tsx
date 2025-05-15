@@ -7,6 +7,7 @@ import axios from "axios";
 import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import SideBar from "@/components/side-bar";
+import clsx from "clsx";
 
 export default function Home() {
   const [input, setInput] = useState(""); // 输入框内容
@@ -88,9 +89,10 @@ export default function Home() {
               ></textarea>
               <div className="flex flex-row items-center justify-between w-full">
                 <div
-                  className={`flex flex-row items-center justify-center rounded-lg border-[1px] px-2 py-1 cursor-pointer ${
+                  className={clsx(
+                    "flex flex-row items-center justify-center rounded-lg border-[1px] px-2 py-1 cursor-pointer",
                     model === "deepseek-r1" ? "border-blue-300 bg-blue-200" : "border-gray-300"
-                  }`}
+                  )}
                   onClick={handleChangeModel}
                 >
                   <p className="text-sm">深度思考(R1)</p>
