@@ -132,7 +132,7 @@ export default function Page() {
                             message?.role === "assistant" ? "bg-blue-300" : "bg-slate-100"
                           )}
                         >
-                          <ReactMarkdown>{message?.content}</ReactMarkdown>
+                          <ReactMarkdown>{part.text}</ReactMarkdown>
                         </div>
                       );
                   }
